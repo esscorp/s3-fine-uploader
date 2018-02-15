@@ -50,8 +50,8 @@ Note that you will need to change the SID and bucket name.
 Create a dedicated AWS IAM User account and attach the `CustomFineUploader` policy to the user.
 
 If you are not using FineUploader than you can use IAM Server Roles to mange your AWS credentials. The `aws-sdk` node module gets it's credentials from:
-- ** Production:** from IAM service roles. Please read the AWS documentation on AWS IAM Roles.
-- ** Development: from `~/.aws/credentials` file. Please read the AWS documention on local AWS Credentials.
+- **Production:** from IAM service roles. Please read the AWS documentation on AWS IAM Roles.
+- **Development:** from `~/.aws/credentials` file. Please read the AWS documention on local AWS Credentials.
 
 ## AWS S3 Bucket Setup
 
