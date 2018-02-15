@@ -167,57 +167,61 @@ The `views/upload.hbs` template:
 <script src="/libs/fineuploader/s3.fine-uploader.core.min.js"></script>
 <script type="text/javascript">
 
-	$(function() {
+$(function() {
 
-		var endpointS3 = '{{endpoint}}';
-		var accessKey = '{{accessKeyId}}';
-		var serverTime = '{{serverTime}}';
+	var endpointS3 = '{{endpoint}}';
+	var accessKey = '{{accessKeyId}}';
+	var serverTime = '{{serverTime}}';
 
-		var body = $('body');
-		var btn = $('[name="file"]');
-		var base = window.location.href;
-		var endpointSign = base + '/signature';
-		var endpointBlank = base + '/ie9support';
-		var endpointSuccess = base + '/success';
-		var sizeLimit = 1000 * 1000 * 20; // 20 MB
-		var drift = +serverTime - Date.now();
+	var body = $('body');
+	var btn = $('[name="file"]');
+	var base = window.location.href;
+	var endpointSign = base + '/signature';
+	var endpointBlank = base + '/ie9support';
+	var endpointSuccess = base + '/success';
+	var sizeLimit = 1000 * 1000 * 20; // 20 MB
+	var drift = +serverTime - Date.now();
 
-		var uploader = new qq.s3.FineUploaderBasic({
-			element: document.getElementById('uploader'),
-			request: {
-		        endpoint: endpointS3,
-		        accessKey: accessKey,
-				clockDrift: drift
-		    },
-		    signature: {
-		        endpoint: endpointSign
-		    },
-		    uploadSuccess: {
-		        endpoint: endpointSuccess
-		    },
-		    iframeSupport: {
-		        localBlankPagePath: endpointBlank
-		    },
-			validation: {
-				allowEmpty: false,
-				sizeLimit: sizeLimit,
-				image: {
-					maxHeight: 10000,
-					maxWidth: 10000,
-					minHeight: 100,
-					minWidth: 100
-				}
-			},
-			callbacks: new window.uploaderCallbacks(body)
-		});
-
-		btn.change(function() {
-			uploader.addFiles(this);
-		});
+	var uploader = new qq.s3.FineUploaderBasic({
+		element: document.getElementById('uploader'),
+		request: {
+			endpoint: endpointS3,
+			accessKey: accessKey,
+			clockDrift: drift
+		},
+		signature: {
+			endpoint: endpointSign
+		},
+		uploadSuccess: {
+			endpoint: endpointSuccess
+		},
+		iframeSupport: {
+			localBlankPagePath: endpointBlank
+		},
+		validation: {
+			allowEmpty: false,
+			sizeLimit: sizeLimit,
+			image: {
+				maxHeight: 10000,
+				maxWidth: 10000,
+				minHeight: 100,
+				minWidth: 100
+			}
+		},
+		callbacks: new window.uploaderCallbacks(body)
 	});
+
+	btn.change(function() {
+		uploader.addFiles(this);
+	});
+});
 </script>
 
-<p>Press the button below to choose your files to upload. We support image types of .pdf, .jpg, .jpeg, .png, .tiff, and .gif.</p>
+<div class="form-group">
+	<div class="col-sm-offset-2 col-sm-8">
+		<p class="form-control-static">Press the button below to choose your files to upload. We support image types of .pdf, .jpg, .jpeg, .png, .tiff, and .gif.</p>
+	</div>
+</div>
 
 <div id="uploader"></div>
 
@@ -241,128 +245,128 @@ The `views/upload.hbs` template:
 The `progressbar.hbs` template:
 ```html
 <script type="text/javascript">
-	$(function() {
+$(function() {
 
-		var body = $('body');
-		var progress = $('div.progress');
-		var bar = progress.find('div.progress-bar');
-		var originalClasses = bar.attr('class');
+	var body = $('body');
+	var progress = $('div.progress');
+	var bar = progress.find('div.progress-bar');
+	var originalClasses = bar.attr('class');
 
-		function stringify(json){
-			if (!JSON) {
-				return 'no JSON support.';
-			} else if (!JSON.stringify) {
-				return 'no stringify support.';
-			} else if (!json){
-				return 'no data to stringify.'
-			} else {
-				return JSON.stringify(json);
-			}
+	function stringify(json){
+		if (!JSON) {
+			return 'no JSON support.';
+		} else if (!JSON.stringify) {
+			return 'no stringify support.';
+		} else if (!json){
+			return 'no data to stringify.'
+		} else {
+			return JSON.stringify(json);
 		}
+	}
 
-		progress.on('progress.clear', function(event) {
-			progress.trigger('progress.update', 0);
-			bar.attr('class', originalClasses);
-		});
-
-		progress.on('progress.show', function(event) {
-			progress.show();
-		});
-
-		progress.on('progress.activate', function(event) {
-			bar.addClass('active');
-		});
-
-		progress.on('progress.update', function(event, percent) {
-			bar.attr('aria-valuenow', percent);
-			bar.css('width', percent + '%');
-			bar.text(percent + '%');
-		});
-
-		progress.on('progress.done', function(event) {
-			progress.trigger('progress.update', 100);
-			bar.removeClass('active');
-			bar.removeClass('progress-bar-striped');
-			bar.addClass('progress-bar-success');
-		});
-
-		progress.on('progress.fail', function(event) {
-			bar.removeClass('active');
-			bar.removeClass('progress-bar-striped');
-			bar.addClass('progress-bar-danger');
-		});
-
-		progress.on('progress.hide', function(event, delay) {
-			delay = +delay || 0;
-			setTimeout(function() {
-				progress.fadeOut();
-			}, delay);
-		});
-
-		// ***** upload events *****
-		body.on('upload.reject', function(e, data) {
-			var message = 'upload.reject: ' + stringify(data);
-			trackJs.track(message);
-			$('#alert-upload-reject').show();
-			$('#alert-upload-error').hide();
-			$('#alert-upload-success').hide();
-		});
-
-		/*
-			You can simulate an upload error by setting
-			an invalid time (greater than bucket expires time )
-			on your computer. You will also need to disable the
-			the clock drift.
-		*/
-		body.on('upload.error', function(e, data) {
-			var message = 'upload.error: ' + stringify(data);
-			trackJs.track(message);
-			//console.log('upload.error', data);
-
-			$('#alert-upload-error').show();
-			$('#alert-upload-reject').hide();
-			$('#alert-upload-success').hide();
-			progress.trigger('progress.hide', 0);
-			$('.error-reason').html(data.reason);
-		});
-
-		body.on('upload.start', function() {
-
-			$('#alert-upload-reject').hide();
-			$('#alert-upload-error').hide();
-
-			progress.trigger('progress.clear');
-			progress.trigger('progress.show');
-		});
-
-		body.on('upload.all.progress', function(e, data) {
-			var pct = (data.progress * 100).toFixed(0);
-			progress.trigger('progress.update', pct);
-		});
-
-		body.on('upload.all.complete', function(e, data) {
-
-			//seems like finduploader is merging
-			// 'onComplete', 'onAllComplete' and 'onError' events
-			if (data.error) return; // ignore `onError` events
-			if (data.id) return; // ignore 'onComplete' events
-
-			// only as a precaution make sure these are set
-			data.succeeded = data.succeeded || [];
-			data.failed = data.failed || [];
-
-			//console.log('upload.all.complete', data);
-
-			if (data.success || !!data.succeeded.length) {
-				progress.trigger('progress.done');
-				progress.trigger('progress.hide', 2000);
-
-				$('#alert-upload-success').show();
-				$('.btn-file').removeClass('btn-primary');
-				$('.btn-file').addClass('btn-default');
-			}
-		});
+	progress.on('progress.clear', function(event) {
+		progress.trigger('progress.update', 0);
+		bar.attr('class', originalClasses);
 	});
+
+	progress.on('progress.show', function(event) {
+		progress.show();
+	});
+
+	progress.on('progress.activate', function(event) {
+		bar.addClass('active');
+	});
+
+	progress.on('progress.update', function(event, percent) {
+		bar.attr('aria-valuenow', percent);
+		bar.css('width', percent + '%');
+		bar.text(percent + '%');
+	});
+
+	progress.on('progress.done', function(event) {
+		progress.trigger('progress.update', 100);
+		bar.removeClass('active');
+		bar.removeClass('progress-bar-striped');
+		bar.addClass('progress-bar-success');
+	});
+
+	progress.on('progress.fail', function(event) {
+		bar.removeClass('active');
+		bar.removeClass('progress-bar-striped');
+		bar.addClass('progress-bar-danger');
+	});
+
+	progress.on('progress.hide', function(event, delay) {
+		delay = +delay || 0;
+		setTimeout(function() {
+			progress.fadeOut();
+		}, delay);
+	});
+
+	// ***** upload events *****
+	body.on('upload.reject', function(e, data) {
+		var message = 'upload.reject: ' + stringify(data);
+		trackJs.track(message);
+		$('#alert-upload-reject').show();
+		$('#alert-upload-error').hide();
+		$('#alert-upload-success').hide();
+	});
+
+	/*
+		You can simulate an upload error by setting
+		an invalid time (greater than bucket expires time )
+		on your computer. You will also need to disable the
+		the clock drift.
+	*/
+	body.on('upload.error', function(e, data) {
+		var message = 'upload.error: ' + stringify(data);
+		trackJs.track(message);
+		//console.log('upload.error', data);
+
+		$('#alert-upload-error').show();
+		$('#alert-upload-reject').hide();
+		$('#alert-upload-success').hide();
+		progress.trigger('progress.hide', 0);
+		$('.error-reason').html(data.reason);
+	});
+
+	body.on('upload.start', function() {
+
+		$('#alert-upload-reject').hide();
+		$('#alert-upload-error').hide();
+
+		progress.trigger('progress.clear');
+		progress.trigger('progress.show');
+	});
+
+	body.on('upload.all.progress', function(e, data) {
+		var pct = (data.progress * 100).toFixed(0);
+		progress.trigger('progress.update', pct);
+	});
+
+	body.on('upload.all.complete', function(e, data) {
+
+		//seems like finduploader is merging
+		// 'onComplete', 'onAllComplete' and 'onError' events
+		if (data.error) return; // ignore `onError` events
+		if (data.id) return; // ignore 'onComplete' events
+
+		// only as a precaution make sure these are set
+		data.succeeded = data.succeeded || [];
+		data.failed = data.failed || [];
+
+		//console.log('upload.all.complete', data);
+
+		if (data.success || !!data.succeeded.length) {
+			progress.trigger('progress.done');
+			progress.trigger('progress.hide', 2000);
+
+			$('#alert-upload-success').show();
+			$('.btn-file').removeClass('btn-primary');
+			$('.btn-file').addClass('btn-default');
+		}
+	});
+});
 </script>
 
 <div class="form-group">
