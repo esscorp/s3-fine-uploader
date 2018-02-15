@@ -1,5 +1,5 @@
-# s3-fine-uploader
-The `s3-fine-uploader` node module aims to easy the integration between `aws-s3` and [FineUploader](https://docs.fineuploader.com/) jQuery plugin.
+# @esscorp/uploader
+The `@esscorp/uploader` node module aims to easy the integration between `aws-s3` and [FineUploader](https://docs.fineuploader.com/) jQuery plugin.
 
 Features of FindUpload and S3 integrated:
 - Direct uploads from user's browser to S3 bucket.
@@ -15,10 +15,10 @@ Reference: https://docs.fineuploader.com/branch/master/endpoint_handlers/amazon-
 ## Install
 
 ```bash
-npm install @esscorp/s3-fine-uploader --save
+npm install @esscorp/uploader --save
 ```
 
-Include `node_modules/@esscorp/s3-fine-uploader/browser/index.js` in your client side build process.
+Include `node_modules/@esscorp/uploader/browser/index.js` in your client side build process.
 
 ## AWS Credentials Setup
 
@@ -98,8 +98,8 @@ An example express app connecting to a bucket for direct upload from the user's 
 
 In your Express.js app code:
 ```js
-var S3 = require('@esscorp/s3-fine-uploader');
-var controllers = require('@esscorp/s3-fine-uploader/controllers');
+var S3 = require('@esscorp/uploader');
+var controllers = require('@esscorp/uploader/controllers');
 var bucket = new S3({
 	bucket: 'my-upload-bucket',
 	expires: 60 * 60, // 1 hour
