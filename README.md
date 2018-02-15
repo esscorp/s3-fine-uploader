@@ -20,11 +20,61 @@ npm install @esscorp/s3-fine-uploader --save
 
 Reference: https://github.com/FineUploader/fine-uploader/issues/1406
 
+To setup the dedicated AWS IAM user create a custom IAM `Policy` called `CustomFineUploader` which has the following custom permissions:
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "...",
+            "Effect": "Allow",
+            "Action": [
+                "s3:AbortMultipartUpload",
+                "s3:GetObject",
+                "s3:ListMultipartUploadParts",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::my-upload-bucket/*"
+            ]
+        }
+    ]
+}
+```
+
+Create a dedicated user account and attached the user to `CustomFineUploader` policy.
+
 If you are not using FineUploader than you can use IAM server roles to mange your AWS credentials. The `aws-sdk` node module gets it's credentials from:
 - ** Production:** from IAM service roles. Please read the AWS documentation on AWS IAM Roles.
 - ** Development: from `~/.aws/credentials` file. Please read the AWS documention on local AWS Credentials.
 
-## AWS S3 Setup
+## AWS S3 Bucket Setup
+
+Create a new bucket with:
+- Default Properties (eg all disabled).
+- Default Permissions -> Access Control List.
+- Default Permissions -> Bucket Policy (eg empty).
+- Custom Permissions -> CORS of 
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+<CORSRule>
+    <AllowedOrigin>*</AllowedOrigin>
+    <AllowedMethod>POST</AllowedMethod>
+    <AllowedMethod>PUT</AllowedMethod>
+    <AllowedMethod>DELETE</AllowedMethod>
+    <MaxAgeSeconds>3000</MaxAgeSeconds>
+    <ExposeHeader>ETag</ExposeHeader>
+    <AllowedHeader>content-type</AllowedHeader>
+    <AllowedHeader>origin</AllowedHeader>
+    <AllowedHeader>x-amz-acl</AllowedHeader>
+    <AllowedHeader>x-amz-meta-qqfilename</AllowedHeader>
+    <AllowedHeader>x-amz-date</AllowedHeader>
+    <AllowedHeader>authorization</AllowedHeader>
+</CORSRule>
+</CORSConfiguration>
+```
 
 todo: document this
 
