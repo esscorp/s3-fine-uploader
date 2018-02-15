@@ -1,0 +1,11 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+.DS_Store
+
+# Dependency directory
+node_modules
+
+# Any temporary or development files not wanted to be committed
+tmp
