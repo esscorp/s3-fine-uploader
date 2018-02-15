@@ -1,6 +1,6 @@
 {
   "name": "@esscorp/s3-fine-uploader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AWS S3 Wrapper with support for direct upload browser to S3 via the Fine Uploader.",
   "main": "server/index.js",
   "scripts": {
