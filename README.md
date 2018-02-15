@@ -9,6 +9,8 @@ Features of FindUpload and S3 integrated:
 - Handles browser clock drift.
 - Iframe support for ie9 uploads.
 
+Reference: https://docs.fineuploader.com/branch/master/endpoint_handlers/amazon-s3.html
+
 ## Install
 
 ```bash
@@ -86,6 +88,8 @@ Reference: https://docs.fineuploader.com/endpoint_handlers/amazon-s3.html
 ## Clock Drift
 
 If the users computer clock drifts the user's signed upload signature will errors. Therefore, you can pass a clock drift value into the FileUploader. The clock drift value is the milliseconds difference between the server and the browser. You can use a view helper to echo the server time into the view templates or have your server controller pass in the server timestamp to the view.
+
+Reference: https://docs.fineuploader.com/branch/master/api/options-s3.html#request.clockDrift
 
 ## Usage
 
