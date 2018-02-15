@@ -5,8 +5,7 @@ The `s3-fine-uploader` node module aims to easy the integration between `aws-s3`
 - Multiple or single file uploads.
 - Chunked (eg multipart) or Non-chunked uploads for large files.
 - Event based progress bar, errors and status.
-- Handles clock drift between user's computer and app server.
-
+- Handles browser clock drift.
 
 ## Install
 
@@ -44,15 +43,17 @@ To setup the dedicated AWS IAM user create a custom IAM `Policy` called `CustomF
 }
 ```
 
-Create a dedicated user account and attached the user to `CustomFineUploader` policy.
+Note that you will need to change the SID and bucket name.
 
-If you are not using FineUploader than you can use IAM server roles to mange your AWS credentials. The `aws-sdk` node module gets it's credentials from:
+Create a dedicated AWS IAM User account and attach the `CustomFineUploader` policy to the user.
+
+If you are not using FineUploader than you can use IAM Server Roles to mange your AWS credentials. The `aws-sdk` node module gets it's credentials from:
 - ** Production:** from IAM service roles. Please read the AWS documentation on AWS IAM Roles.
 - ** Development: from `~/.aws/credentials` file. Please read the AWS documention on local AWS Credentials.
 
 ## AWS S3 Bucket Setup
 
-Create a new bucket with:
+For AWS S3 buckets which you want to support direct uploads to create a new bucket with:
 - Default Properties (eg all disabled).
 - Default Permissions -> Access Control List.
 - Default Permissions -> Bucket Policy (eg empty).
@@ -78,18 +79,9 @@ Create a new bucket with:
 </CORSConfiguration>
 ```
 
-todo: document this
-
 ## Clock Drift
 
-If the users computer clock drifts or is just plain wrong the user's signed upload signature will cause errors.  Therefore, we create a view helper which echos the server Unix millisecond timestamp (eg 1360013296123) which is passed into the FineUploader. This means the FineUploader and your server share the same time.
-
-```js
-//Unix millisecond timestamp (eg 1360013296123)
-exports.clockDrift = function() {
-	return Moment().format('x');
-};
-```
+If the users computer clock drifts the user's signed upload signature will errors. Therefore, you can pass a clock drift value into the FileUploader. The clock drift value is difference between the server and the browser time in unix milliseconds. You can use a view helper to echo the server time into the view templates or have your server controller pass in the server timestamp.
 
 ## Usage
 
@@ -118,7 +110,8 @@ var uploadController = function(req, res, next) {
 
 		res.render('views/upload', {
             accessKeyId: accessKeyId,
-            endpoint: bucket.endpoint()
+            endpoint: bucket.endpoint(),
+            timeServer: Date.now()
         });
 	});
 };
@@ -167,23 +160,25 @@ The `views/upload.hbs` template:
 
 	$(function() {
 
-		var btn = $('[name="file"]');
-		var body = $('body');
+        var endpointS3 = '{{endpoint}}';
+        var accessKey = '{{accessKeyId}}';
+        var serverTime = '{{serverTime}}';
+
+        var body = $('body');
+        var btn = $('[name="file"]');
 		var base = window.location.href;
-		var bucket = '{{endpoint}}';
 		var endpointSign = base + '/signature';
 		var endpointBlank = base + '/ie9support';
 		var endpointSuccess = base + '/success';
 		var sizeLimit = 1000 * 1000 * 20; // 20 MB
-
-		var accessKey = '{{accessKeyId}}';
+        var drift = +serverTime - Date.now();
 
 		var uploader = new qq.s3.FineUploaderBasic({
 			element: document.getElementById('uploader'),
 			request: {
-		        endpoint: bucket,
+		        endpoint: endpointS3,
 		        accessKey: accessKey,
-				clockDrift: {{clockDrift}} - Date.now()
+				clockDrift: drift
 		    },
 		    signature: {
 		        endpoint: endpointSign
