@@ -27,5 +27,10 @@
     "lodash.isstring": "^4.0.1",
     "provejs-params": "^1.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@esscorp/eslint": "^2.2.1",
+    "eslint": "^4.9.0",
+    "grunt": "^1.0.1",
+    "grunt-eslint": "^20.1.0"
+  }
 }

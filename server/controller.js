@@ -1,3 +1,4 @@
+'use strict';
 
 // Controller to handle the signature requests from FineUploader.
 // For multipart uploads this controller gets called for every part.

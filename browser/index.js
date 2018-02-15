@@ -1,3 +1,4 @@
+
 window.uploaderCallbacks = function (div) {
 
     function acceptableMime(file, name) { // eslint-disable-line no-unused-vars
