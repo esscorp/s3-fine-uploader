@@ -53,7 +53,7 @@ exports._nonChunked = function(bucket, req, res, next) {
 
 // Controller to handle the signature requests from FineUploader.
 // For multipart uploads this controller gets called for every part.
-exports.controller = function(bucket) {
+exports.signer = function(bucket) {
 	return function(req, res, next) {
 		//var policy = req.body;
 		var isChunked = !!req.body.headers;
@@ -61,5 +61,13 @@ exports.controller = function(bucket) {
 			? exports._chunked // multipart (chunked) request
 			: exports._nonChunked; // simple (non-chunked) request
 		return sign(bucket, req, res, next);
+	};
+};
+
+// blank page for ie9 iframe upload support
+exports.blank = function() {
+	return function(req, res) {
+		var blank = '<html><body></body></html>';
+		res.send(blank);
 	};
 };

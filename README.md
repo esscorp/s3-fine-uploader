@@ -98,7 +98,7 @@ An example express app connecting to a bucket for direct upload from the user's 
 In your Express.js app code:
 ```js
 var S3 = require('@esscorp/s3-fine-uploader');
-var signer = require('@esscorp/s3-fine-uploader/signer');
+var controllers = require('@esscorp/s3-fine-uploader/controllers');
 var bucket = new S3({
 	bucket: 'my-upload-bucket',
 	expires: 60 * 60, // 1 hour
@@ -111,7 +111,8 @@ var bucket = new S3({
 		secretAccessKey: process.env.AWS_APP_UPLOADER_SECRET_ACCESS_KEY
 	}
 });
-var signerController = signer.controller(bucket);
+var signerController = controllers.signer(bucket);
+var blankController = controllers.blank(); // ie9 iframe support
 
 // Controller to show the upload form.
 var uploadController = function(req, res, next) {
@@ -143,17 +144,13 @@ var successController = function(req, res, next) {
 	});
 };
 
-var ie9support = function(req, res) {
-	res.render('views/ie9support');
-};
-
 // Wire up controllers to express router
 var express = require('express');
 var router = express.Router();
 router.get('/upload', uploadController); // show upload form
-router.post('/signature', signatureController); // FineUpload callback to sign upload requests
+router.post('/signature', signerController); // FineUpload callback to sign upload requests
 router.post('/success', successController); // FineUpload callback to handle successful uploads
-router.get('/ie9support', ie9supportController); // iframe support for ie9
+router.get('/ie9support', blankController); // iframe support for ie9
 ```
 
 The `views/upload.hbs` template:
