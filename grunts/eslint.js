@@ -13,7 +13,15 @@ module.exports = function(grunt) {
 			},
 			nonull: true,
 			src: [
-                'server/**/*.js',
+                'server/**/*.js'
+			]
+		},
+		frontend: {
+			options: {
+				configFile: 'node_modules/@esscorp/eslint/configs/frontend.js'
+			},
+			nonull: true,
+			src: [
                 'browser/**/*.js'
 			]
 		}
