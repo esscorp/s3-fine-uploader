@@ -2,7 +2,7 @@
   "name": "@esscorp/s3-fine-uploader",
   "version": "1.0.0",
   "description": "AWS S3 Wrapper with support for direct upload browser to S3 via the Fine Uploader.",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

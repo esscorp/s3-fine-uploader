@@ -14,6 +14,8 @@ The `s3-fine-uploader` node module aims to easy the integration between `aws-s3`
 npm install @esscorp/s3-fine-uploader --save
 ```
 
+Include `node_modules/@esscorp/s3-fine-uploader/browser/index.js` in your client side build process.
+
 ## AWS Credentials Setup
 
 [FineUploader](https://docs.fineuploader.com/) jQuery plugin has a limitation which prevents the server from telling the browser which `accessKeyId` to use with a `signature`. When using IAM server roles EC2 instances refresh their credentials intermittently, and each instance in an app has different credentials. Therefore, FineUploader cannot use a signature created with an EC2 instances credentials. We workaround this limitation by using separate, unchanging credentials dedicated to FineUploader set in the EC2 instance environment variables.
@@ -95,6 +97,7 @@ An example express app connecting to a bucket for direct upload from the user's 
 
 ```js
 var S3 = require('@esscorp/s3-fine-uploader');
+var signatureController = require('@esscorp/s3-fine-uploader/controller');
 var bucket = new S3({
 	bucket: 'my-upload-bucket',
 	expires: 60 * 60, // 1 hour
@@ -117,68 +120,6 @@ var uploadController = function(req, res, next) {
             accessKeyId: accessKeyId,
             endpoint: bucket.endpoint()
         });
-	});
-};
-
-// Controller to handle the signature requests from FineUploader.
-// For multipart uploads this controller gets called for every part.
-var signatureController = function(req, res, next) {
-    var policy = req.body;
-    var isChunked = !!req.body.headers;
-	var sign = (isChunked)
-		? _chunked // multipart (chunked) request
-		: _nonChunked; // simple (non-chunked) request
-	return sign(req, res, next);
-};
-
-var _chunked = function(req, res, next) {
-
-	var policy = req.body;
-	var version = req.query.v4 ? 4 : 2;
-	var stringToSign = policy.headers;
-	var sign = (version === 4)
-		? bucket.signV4RestRequest
-		: bucket.signV2RestRequest;
-
-	sign(stringToSign, function(err, signature) {
-		if (err) return next(err);
-
-		var jsonResponse = {signature: signature};
-
-		res.setHeader('Content-Type', 'application/json');
-
-		if (bucket.isValidRestRequest(stringToSign, version)) {
-			res.json(jsonResponse);
-		} else {
-			next(new Error('Invalid chunked request'));
-		}
-	});
-};
-
-var _nonChunked = function(req, res, next) {
-
-	var policy = req.body;
-	var isV4 = !!req.query.v4;
-	var base64Policy = new Buffer(JSON.stringify(policy)).toString('base64');
-	var sign = (isV4)
-		? bucket.signV4Policy
-		: bucket.signV2Policy;
-
-	sign(policy, base64Policy, function(err, signature) {
-		if (err) return next(err);
-
-		var jsonResponse = {
-			policy: base64Policy,
-			signature: signature
-		};
-
-		res.setHeader('Content-Type', 'application/json');
-
-		if (bucket.isPolicyValid(policy)) {
-			res.json(jsonResponse);
-		} else {
-			next(new Error('Invalid non-chunked request'));
-		}
 	});
 };
 
@@ -223,119 +164,6 @@ The `views/upload.hbs` template:
 <!-- if you are using the fineuploader S3 with no UI -->
 <script src="/libs/fineuploader/s3.fine-uploader.core.min.js"></script>
 <script type="text/javascript">
-
-    function uploaderCallbacks(div) {
-
-        function acceptableMime(file, name) { // eslint-disable-line no-unused-vars
-            var mime = (file && file.type)? file.type : false;
-            var mimes = ['image/jpeg', 'image/gif', 'image/png', 'image/bmp', 'image/tiff', 'application/pdf'];
-            var accepted = ($.inArray(mime, mimes) >= 0);
-            return accepted;
-        }
-
-        function acceptableExt(file, name) {
-
-            var ext = name.substring(name.indexOf('.') + 1).toLowerCase();
-            var exts = ['jpeg', 'jpg', 'gif', 'png', 'bmp', 'tiff', 'pdf'];
-            var accepted = ($.inArray(ext, exts) >= 0);
-            return accepted;
-        }
-
-        // some browsers will not support File API and
-        // therefore the acceptableMime() will fail
-        function acceptable(file, name) {
-
-            var acceptedExt = acceptableExt(file, name);
-            var acceptedMime = acceptableMime(file, name);
-
-            if (acceptedMime) return true;
-            if (acceptedExt) return true;
-            return false;
-        }
-
-        function onSubmit(id, name) {
-            var uuid = this.getUuid(id);
-            var file = this.getFile(id);
-            var accepted = acceptable(file, name);
-            var trigger = (accepted)? 'upload.accept' : 'upload.reject';
-
-            //console.log('onSubmit()', accepted);
-
-            div.trigger(trigger, {
-                uuid: uuid,
-                name: name
-            });
-            return accepted;
-        }
-
-        function onSubmitted(id, name) {
-            var uuid = this.getUuid(id);
-            //console.log('onSubmitted()', uuid);
-            div.trigger('upload.start', {
-                uuid: uuid,
-                name: name
-            });
-        }
-
-        function onProgress(id, name, uploadedBytes, totalBytes) {
-            var uuid = this.getUuid(id);
-            //console.log('onProgress()', uuid);
-            div.trigger('upload.progress', {
-                uuid: uuid,
-                progress: uploadedBytes / totalBytes
-            });
-        }
-
-        function onTotalProgress(uploadedBytes, totalBytes) {
-            //console.log('onProgress()', uuid);
-            div.trigger('upload.all.progress', {
-                progress: uploadedBytes / totalBytes
-            });
-        }
-
-        // onError is called on all upload errors. In particular,
-        // when fineuploader validation fails the `this.getUuid(id)`
-        // throws an error if id is undefined.
-        function onError(id, name, reason, xhr) { // eslint-disable-line no-unused-vars
-
-            //console.log('onError()', id, name, reason);
-
-            // if you cancel on second upload, eat this error
-            if (reason === 'No files to upload.') return;
-
-            var data = {
-                reason: reason
-            };
-            if (id) data.id = id;
-            if (id) data.uuid = this.getUuid(id);
-            if (id) data.name = name;
-
-            div.trigger('upload.error', data);
-        }
-
-        function onComplete(id, name, json, xhr) { // eslint-disable-line no-unused-vars
-            //var uuid = json.uuid;
-            //console.log('onComplete()', uuid);
-            div.trigger('upload.complete', json);
-        }
-
-        function onAllComplete(succeeded, failed) {
-            div.trigger('upload.all.complete', {
-                succeeded: succeeded || [],
-                failed: failed || []
-            });
-        }
-
-        return {
-            onSubmit: onSubmit,
-            onSubmitted: onSubmitted,
-            onProgress: onProgress,
-            onTotalProgress: onTotalProgress,
-            onError: onError,
-            onComplete: onComplete,
-            onAllComplete: onAllComplete
-        };
-    };
 
 	$(function() {
 
