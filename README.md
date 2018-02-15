@@ -1,11 +1,13 @@
 # s3-fine-uploader
-The `s3-fine-uploader` node module aims to easy the integration between `aws-s3` and [FineUploader](https://docs.fineuploader.com/) jQuery plugin. This integration supports:
+The `s3-fine-uploader` node module aims to easy the integration between `aws-s3` and [FineUploader](https://docs.fineuploader.com/) jQuery plugin.
 
+Features of FindUpload and S3 integrated:
 - Direct uploads from user's browser to S3 bucket.
 - Multiple or single file uploads.
 - Chunked (eg multipart) or Non-chunked uploads for large files.
 - Event based progress bar, errors and status.
 - Handles browser clock drift.
+- Iframe support for ie9 uploads.
 
 ## Install
 
@@ -142,9 +144,9 @@ var ie9support = function(req, res) {
 var express = require('express');
 var router = express.Router();
 router.get('/upload', uploadController); // show upload form
-router.post('/signature', signatureController); // sign upload requests
-router.post('/success', successController); // handle successful uploads
-router.get('/ie9support', ie9supportController); // show ie9 sucks
+router.post('/signature', signatureController); // FineUpload callback to sign upload requests
+router.post('/success', successController); // FineUpload callback to handle successful uploads
+router.get('/ie9support', ie9supportController); // iframe support for ie9
 ```
 
 The `views/upload.hbs` template:
@@ -161,18 +163,18 @@ The `views/upload.hbs` template:
 
 	$(function() {
 
-        var endpointS3 = '{{endpoint}}';
-        var accessKey = '{{accessKeyId}}';
-        var serverTime = '{{serverTime}}';
+		var endpointS3 = '{{endpoint}}';
+		var accessKey = '{{accessKeyId}}';
+		var serverTime = '{{serverTime}}';
 
-        var body = $('body');
-        var btn = $('[name="file"]');
+		var body = $('body');
+		var btn = $('[name="file"]');
 		var base = window.location.href;
 		var endpointSign = base + '/signature';
 		var endpointBlank = base + '/ie9support';
 		var endpointSuccess = base + '/success';
 		var sizeLimit = 1000 * 1000 * 20; // 20 MB
-        var drift = +serverTime - Date.now();
+		var drift = +serverTime - Date.now();
 
 		var uploader = new qq.s3.FineUploaderBasic({
 			element: document.getElementById('uploader'),
