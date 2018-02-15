@@ -1,17 +1,6 @@
 'use strict';
 
-// Controller to handle the signature requests from FineUploader.
-// For multipart uploads this controller gets called for every part.
-exports = function(req, res, next) {
-    var policy = req.body;
-    var isChunked = !!req.body.headers;
-	var sign = (isChunked)
-		? _chunked // multipart (chunked) request
-		: _nonChunked; // simple (non-chunked) request
-	return sign(req, res, next);
-};
-
-var _chunked = function(req, res, next) {
+exports._chunked = function(bucket, req, res, next) {
 
 	var policy = req.body;
 	var version = req.query.v4 ? 4 : 2;
@@ -35,7 +24,7 @@ var _chunked = function(req, res, next) {
 	});
 };
 
-var _nonChunked = function(req, res, next) {
+exports._nonChunked = function(bucket, req, res, next) {
 
 	var policy = req.body;
 	var isV4 = !!req.query.v4;
@@ -54,10 +43,23 @@ var _nonChunked = function(req, res, next) {
 
 		res.setHeader('Content-Type', 'application/json');
 
-		if (bucket.isPolicyValid(policy)) {
+		if (bucket.isPolicyValid()) {
 			res.json(jsonResponse);
 		} else {
 			next(new Error('Invalid non-chunked request'));
 		}
 	});
+};
+
+// Controller to handle the signature requests from FineUploader.
+// For multipart uploads this controller gets called for every part.
+exports.controller = function(bucket) {
+	return function(req, res, next) {
+		//var policy = req.body;
+		var isChunked = !!req.body.headers;
+		var sign = (isChunked)
+			? exports._chunked // multipart (chunked) request
+			: exports._nonChunked; // simple (non-chunked) request
+		return sign(bucket, req, res, next);
+	};
 };

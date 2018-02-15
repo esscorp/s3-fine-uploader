@@ -98,7 +98,7 @@ An example express app connecting to a bucket for direct upload from the user's 
 In your Express.js app code:
 ```js
 var S3 = require('@esscorp/s3-fine-uploader');
-var signatureController = require('@esscorp/s3-fine-uploader/controller');
+var signer = require('@esscorp/s3-fine-uploader/signer');
 var bucket = new S3({
 	bucket: 'my-upload-bucket',
 	expires: 60 * 60, // 1 hour
@@ -111,6 +111,7 @@ var bucket = new S3({
 		secretAccessKey: process.env.AWS_APP_UPLOADER_SECRET_ACCESS_KEY
 	}
 });
+var signerController = signer.controller(bucket);
 
 // Controller to show the upload form.
 var uploadController = function(req, res, next) {
