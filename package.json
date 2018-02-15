@@ -1,0 +1,30 @@
+{
+  "name": "@esscorp/s3-fine-uploader",
+  "version": "1.0.0",
+  "description": "AWS S3 Wrapper with support for direct upload browser to S3 via the Fine Uploader.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esscorp/s3-fine-uploader.git"
+  },
+  "keywords": [
+    "S3",
+    "Fine",
+    "Uploader"
+  ],
+  "author": "dan@hollenbecks.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/esscorp/s3-fine-uploader/issues"
+  },
+  "homepage": "https://github.com/esscorp/s3-fine-uploader#readme",
+  "dependencies": {
+    "aws-sdk": "^2.195.0",
+    "crypto-js": "^3.1.9-1",
+    "lodash.isstring": "^4.0.1",
+    "provejs-params": "^1.0.1"
+  }
+}
