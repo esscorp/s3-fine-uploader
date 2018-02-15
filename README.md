@@ -81,6 +81,8 @@ For AWS S3 buckets which you want to support direct uploads to create a new buck
 </CORSConfiguration>
 ```
 
+Reference: https://docs.fineuploader.com/endpoint_handlers/amazon-s3.html
+
 ## Clock Drift
 
 If the users computer clock drifts the user's signed upload signature will errors. Therefore, you can pass a clock drift value into the FileUploader. The clock drift value is the milliseconds difference between the server and the browser. You can use a view helper to echo the server time into the view templates or have your server controller pass in the server timestamp to the view.
