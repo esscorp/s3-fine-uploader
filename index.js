@@ -10,12 +10,12 @@ var ok = Assert.ok;
 module.exports = function(cfg) {
 
 	// validate
-	ok(isString(cfg.ns), 'Config `ns` expected to be string.');
 	ok(isFinite(cfg.expires), 'Config `expires` expected to be integer.');
 	ok(isString(cfg.bucket), 'Config `bucket` expected to be a string.');
 
 	// AWS client
-	var s3 = new AWS.S3(cfg.iam);
+    var s3 = new AWS.S3(cfg.iam);
+    var hostname = cfg.hostname || cfg.bucket + '.s3.amazonaws.com';
 
 	var getAccessKeyId = function(next) {
 
