@@ -3,11 +3,12 @@ The `s3-fine-uploader` node module aims to easy the integration between `aws-s3`
 
 Features of FindUpload and S3 integrated:
 - Direct uploads from user's browser to S3 bucket.
-- Multiple or single file uploads.
 - Chunked (eg multipart) or Non-chunked uploads for large files.
 - Event based progress bar, errors and status.
-- Handles browser clock drift.
+- Multiple or single file uploads.
 - Iframe support for ie9 uploads.
+- Handles browser clock drift.
+
 
 Reference: https://docs.fineuploader.com/branch/master/endpoint_handlers/amazon-s3.html
 
