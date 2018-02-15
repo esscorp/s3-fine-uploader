@@ -211,7 +211,6 @@ The `views/upload.hbs` template:
 	});
 </script>
 
-
 <p>Press the button below to choose your files to upload. We support image types of .pdf, .jpg, .jpeg, .png, .tiff, and .gif.</p>
 
 <div id="uploader"></div>
