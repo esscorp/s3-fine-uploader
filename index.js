@@ -17,6 +17,14 @@ module.exports = function(cfg) {
     var s3 = new AWS.S3(cfg.iam);
     var hostname = cfg.hostname || cfg.bucket + '.s3.amazonaws.com';
 
+    function name() {
+        return cfg.bucket;
+    }
+
+    function endpoint() {
+        return 'https://' + hostname;
+    }
+
 	var getAccessKeyId = function(next) {
 
 		s3.config.getCredentials(function(err) {
@@ -327,6 +335,10 @@ module.exports = function(cfg) {
 
 	// public functions
 	return {
+        
+        name: name,
+        endpoint: endpoint,
+
 		getAccessKeyId: getAccessKeyId,
 		// getSecretAccessKey: getSecretAccessKey,
 
