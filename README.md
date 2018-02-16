@@ -1,7 +1,7 @@
 # @esscorp/uploader
-The `@esscorp/uploader` node module aims to easy the integration between `aws-s3` and [FineUploader](https://docs.fineuploader.com/) jQuery plugin.
+The `@esscorp/uploader` node module aims to easy the integration of [FineUploader](https://docs.fineuploader.com/) jQuery plugin.
 
-Features of FindUpload and S3 integrated:
+Integrated features:
 - Direct uploads from user's browser to S3 bucket.
 - Chunked (eg multipart) or Non-chunked uploads for large files.
 - Event based progress bar, errors and status.
@@ -10,7 +10,9 @@ Features of FindUpload and S3 integrated:
 - Handles browser clock drift.
 
 
-Reference: https://docs.fineuploader.com/branch/master/endpoint_handlers/amazon-s3.html
+Reference: 
+- https://docs.fineuploader.com/branch/master/endpoint_handlers/amazon-s3.html
+- https://github.com/esscorp/s3
 
 ## Install
 
@@ -102,12 +104,9 @@ var S3 = require('@esscorp/uploader');
 var controllers = require('@esscorp/uploader/controllers');
 var bucket = new S3({
 	bucket: 'my-upload-bucket',
-	expires: 60 * 60, // 1 hour
 	minSize: null,
 	maxSize: null,
 	iam: {
-		region: 'us-east-1',
-		apiVersion: '2006-03-01'
 		accessKeyId: process.env.AWS_APP_UPLOADER_ACCESS_KEY_ID,
 		secretAccessKey: process.env.AWS_APP_UPLOADER_SECRET_ACCESS_KEY
 	}
@@ -141,7 +140,11 @@ var successController = function(req, res, next) {
 		if (err) return next(err);
 		if (!verified) return next(new Error('S3 file is invalid'));
 
-		// do something with the fact that you now have a verified file uploaded to S3.
+		// setup for saving upload meta data to database
+		var s3Bucket = bucket.name();
+		var s3Key = uuid;
+
+		// todo: save meta data to database here
 	});
 };
 

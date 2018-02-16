@@ -1,9 +1,9 @@
 'use strict';
 
-//var isString = require('lodash.isstring');
+var S3 = require('@esscorp/s3');
+var isString = require('lodash.isstring');
 var Assert = require('assert');
-var Prove = require('provejs-params');
-var AWS = require('aws-sdk');
+//var Prove = require('provejs-params');
 var CryptoJS = require('crypto-js');
 var ok = Assert.ok;
 
@@ -11,113 +11,29 @@ module.exports = function(cfg) {
 
 	// validate
 	ok(isFinite(cfg.expires), 'Config `expires` expected to be integer.');
+	ok(isString(cfg.bucket), 'Config `bucket` expected to be string.');
 
 	// AWS client
-	var s3 = new AWS.S3(cfg.iam);
-	var hostname = cfg.hostname || cfg.bucket + '.s3.amazonaws.com';
+	var s3 = new S3(cfg.iam);
+	var hostname = cfg.bucket + '.s3.amazonaws.com';
 
 	function endpoint() {
 		return 'https://' + hostname;
 	}
 
 	function getAccessKeyId(next) {
-
-		s3.config.getCredentials(function(err) {
+		s3.credentials(function(err, credentials) {
 			if (err) return next(err);
-
-			next(null, s3.config.credentials.accessKeyId);
+			next(null, credentials.accessKeyId);
 		});
 	}
 
 	function getSecretAccessKey(next) {
-
-		s3.config.getCredentials(function(err) {
+		s3.credentials(function(err, credentials) {
 			if (err) return next(err);
-
-			next(null, s3.config.credentials.secretAccessKey);
+			next(null, credentials.secretAccessKey);
 		});
 	}
-
-	function download(s3Bucket, s3Path, next) {
-		var params = {
-			Bucket: s3Bucket,
-			Key: s3Path
-		};
-		s3.getObject(params, next);
-	}
-
-	function head(s3Bucket, s3Path, next) {
-		var params = {
-			Bucket: s3Bucket,
-			Key: s3Path
-		};
-
-		s3.headObject(params, function(err, head) {
-			//if (err) console.log (err);
-			if (err && err.statusCode === 404) return next(null, false);
-			if (err && err.code === 'Forbidden') return next(null, false);
-			if (err) return next(err);
-			next(null, head);
-		});
-	}
-
-	function del(s3Bucket, s3Path, next) {
-		var params = {
-			Bucket: s3Bucket,
-			Key: s3Path
-		};
-
-		s3.deleteObject(params, function(err) {
-			//if (err) console.log (err);
-			if (err && err.statusCode === 404) return next(null, false);
-			if (err && err.code === 'Forbidden') return next(null, false);
-			if (err) return next(err);
-			next();
-		});
-	}
-
-	function exists(s3Bucket, s3Path, next) {
-		head(s3Bucket, s3Path, function(err, head) {
-			if (err) return next(err);
-			next(null, head);
-		});
-	}
-
-	function contentType(s3Bucket, s3Path, next) {
-		head(s3Bucket, s3Path, function(err, head) {
-			if (err) return next(err);
-			next(null, head.ContentType);
-		});
-	}
-
-	function contents(s3Bucket, s3Path, next) {
-		download(s3Bucket, s3Path, function(err, data) {
-			if (err) return next(err);
-
-			next(null, data.Body.toString());
-		});
-	}
-
-	function copy(srcBucket, srcKey, dstBucket, dstKey, next) {
-
-		var params = {
-			CopySource: srcBucket + '/' + srcKey,
-			Bucket: dstBucket,
-			Key: dstKey,
-			MetadataDirective: 'COPY'
-		};
-
-		Prove('***F', arguments);
-
-		s3.copyObject(params, function(err) {
-			if (err) return next(err);
-
-			next(null, dstBucket);
-		});
-	}
-
-	// ***** www.fineuploader.com
-	// https://github.com/FineUploader/server-examples/blob/master/nodejs/s3/s3handler.js
 
 	function getV2SignatureKey(key, stringToSign) {
 		var words = CryptoJS.HmacSHA1(stringToSign, key);
@@ -206,8 +122,6 @@ module.exports = function(cfg) {
 	// the top of this file to disable size validation on the policy document.
 	function isPolicyValid(policy) {
 
-		// console.log('isPolicyValid()');
-
 		var bucket, parsedMaxSize, parsedMinSize;
 		var expectedMinSize = cfg.minSize;
 		var expectedMaxSize = cfg.maxSize;
@@ -237,7 +151,6 @@ module.exports = function(cfg) {
 				&& (parsedMaxSize === expectedMaxSize.toString());
 		}
 
-		// console.log('isPolicyValid()');
 		// console.log('* isValidBucket:', isValidBucket);
 		// console.log('* isValidSize:', isValidSize);
 
@@ -256,9 +169,9 @@ module.exports = function(cfg) {
 
 	// Verify file uploaded by browser.
 	// Return head incase we need to create a db record using head data.
-	function verifyUpload(s3Bucket, s3Path, next) {
+	function verifyUpload(s3Path, next) {
 
-		head(s3Bucket, s3Path, function(err, head1) {
+		s3.head(cfg.bucket, s3Path, function(err, head1) {
 			if (err) return next(err);
 
 			var size = head1.ContentLength;
@@ -267,7 +180,7 @@ module.exports = function(cfg) {
 
 			if (cfg.maxSize && size > cfg.maxSize) {
 				// delete file since it too large
-				del(s3Bucket, s3Path, function(err) {
+				s3.del(cfg.bucket, s3Path, function(err) {
 					if (err) return next(err);
 					next(null, false, size, mime, etag);
 				});
@@ -277,79 +190,11 @@ module.exports = function(cfg) {
 		});
 	}
 
-	function urlPrivate(s3Bucket, s3Path, next) {
-
-		// todo:
-		// https://blogs.msdn.microsoft.com/ie/2008/07/02/ie8-security-part-v-comprehensive-protection/
-		// https://github.com/blog/1482-heads-up-nosniff-header-support-coming-to-chrome-and-firefox
-		// X-Content-Type-Options: nosniff
-
-		var params = {
-			Bucket: s3Bucket,
-			Expires: cfg.expires,
-			//ResponseContentDisposition: 'attachment',
-			Key: s3Path
-		};
-		s3.getSignedUrl('getObject', params, next);
-		//return url;
-	}
-
-	function urlDownload(s3Bucket, s3Path, filename, next) {
-
-		//Content-Disposition: attachment; filename=foo.bar
-		var rcd = 'attachment; filename=' + filename;
-
-		var params = {
-			Bucket: s3Bucket,
-			Expires: cfg.expires,
-			ResponseContentDisposition: rcd,
-			Key: s3Path
-		};
-		s3.getSignedUrl('getObject', params, next);
-	}
-
-	function urlSigned(s3Bucket, s3Path, mime, next) {
-
-		Prove('SSF', arguments);
-
-		//console.log('urlSigned()'.red, s3Path, mime);
-
-		var params = {
-			Bucket: s3Bucket,
-			Expires: cfg.expires,
-			ContentType: mime,
-			Key: s3Path
-		};
-
-		// to force upload to fail
-		// delete params.ContentType;
-
-		s3.getSignedUrl('putObject', params, next);
-	}
-
 	// public functions
 	return {
-
-		endpoint: endpoint,
-
-		getAccessKeyId: getAccessKeyId,
-
-		urlSigned: urlSigned,
-		urlPrivate: urlPrivate,
-		urlDownload: urlDownload,
-
-		download: download,
-		head: head,
-		del: del,
-		exists: exists,
-		contentType: contentType,
-		contents: contents,
-		copy: copy,
 		options: cfg,
-
-		// www.fineuploader.com
-		// getV2SignatureKey: getV2SignatureKey,
-		// getV4SignatureKey: getV4SignatureKey,
+		endpoint: endpoint,
+		getAccessKeyId: getAccessKeyId,
 		signV2Policy: signV2Policy,
 		signV4Policy: signV4Policy,
 		signV2RestRequest: signV2RestRequest,
