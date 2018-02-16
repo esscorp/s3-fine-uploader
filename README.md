@@ -396,7 +396,7 @@ $(function() {
 
 ## Database
 
-Best practices for storing upload meta data the database:
+Best practices for storing upload meta data in the database:
 
 - s3Bucket ENUM(): This useful when you want to move S3 assets to new buckets. No one is perfect.
 - s3Key VARCHAR(60): Stores the UUID plus the file extension.
