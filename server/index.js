@@ -22,6 +22,10 @@ module.exports = function(cfg) {
 		return 'https://' + hostname;
 	}
 
+	function name() {
+		return cfg.bucket;
+	}
+
 	function getAccessKeyId(next) {
 		s3.credentials(function(err, credentials) {
 			if (err) return next(err);
@@ -194,6 +198,7 @@ module.exports = function(cfg) {
 	// public functions
 	return {
 		options: cfg,
+		name: name,
 		endpoint: endpoint,
 		getAccessKeyId: getAccessKeyId,
 		signV2Policy: signV2Policy,
