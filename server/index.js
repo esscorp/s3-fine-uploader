@@ -25,7 +25,7 @@ module.exports = function(cfg) {
 		return 'https://' + hostname;
 	}
 
-	var getAccessKeyId = function(next) {
+	function getAccessKeyId(next) {
 
 		s3.config.getCredentials(function(err) {
 			if (err) return next(err);
@@ -43,7 +43,7 @@ module.exports = function(cfg) {
 		});
 	}
 
-	var download = function(s3Path, next) {
+	function download(s3Path, next) {
 		var params = {
 			Bucket: cfg.bucket,
 			Key: s3Path
@@ -51,7 +51,7 @@ module.exports = function(cfg) {
 		s3.getObject(params, next);
 	};
 
-	var head = function(s3Path, next) {
+	function head(s3Path, next) {
 		var params = {
 			Bucket: cfg.bucket,
 			Key: s3Path
@@ -66,7 +66,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var del = function(s3Path, next) {
+	function del(s3Path, next) {
 		var params = {
 			Bucket: cfg.bucket,
 			Key: s3Path
@@ -81,21 +81,21 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var exists = function(s3Path, next) {
+	function exists(s3Path, next) {
 		head(s3Path, function(err, head) {
 			if (err) return next(err);
 			next(null, (head));
 		});
 	};
 
-	var contentType = function(s3Path, next) {
+	function contentType(s3Path, next) {
 		head(s3Path, function(err, head) {
 			if (err) return next(err);
 			next(null, head.ContentType);
 		});
 	};
 
-	var contents = function(s3Path, next) {
+	function contents(s3Path, next) {
 		download(s3Path, function(err, data) {
 			if (err) return next(err);
 
@@ -103,7 +103,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var copy = function(dstKey, srcBucket, srcKey, next) {
+	function copy(dstKey, srcBucket, srcKey, next) {
 
 		var dstBucket = cfg.bucket;
 		var params = {
@@ -140,7 +140,7 @@ module.exports = function(cfg) {
 		return CryptoJS.HmacSHA256(stringToSign, kSigning).toString();
 	}
 
-	var signV2Policy = function(policy, base64Policy, next) {
+	function signV2Policy(policy, base64Policy, next) {
 
 		// console.log('signV2Policy()');
 
@@ -153,7 +153,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var signV4Policy = function(policy, base64Policy, next) {
+	function signV4Policy(policy, base64Policy, next) {
 
 		// console.log('signV4Policy()');
 
@@ -176,7 +176,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var signV2RestRequest = function(headersStr, next) {
+	function signV2RestRequest(headersStr, next) {
 
 		// console.log('signV2RestRequest()');
 
@@ -189,7 +189,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var signV4RestRequest = function(headersStr, next) {
+	function signV4RestRequest(headersStr, next) {
 
 		// console.log('signV4RestRequest()');
 
@@ -210,7 +210,7 @@ module.exports = function(cfg) {
 	// targeting the correct bucket and the min/max-size is as expected.
 	// Comment out the expectedMaxSize and expectedMinSize variables near
 	// the top of this file to disable size validation on the policy document.
-	var isPolicyValid = function(policy) {
+	function isPolicyValid(policy) {
 
 		// console.log('isPolicyValid()');
 
@@ -252,7 +252,7 @@ module.exports = function(cfg) {
 
 	// Ensures the REST request is targeting the correct bucket.
 	// Omit if you don't want to support chunking.
-	var isValidRestRequest = function(headerStr, version) {
+	function isValidRestRequest(headerStr, version) {
 		if (version === 4) {
 			return new RegExp('host:' + cfg.hostname).exec(headerStr) != null;
 		}
@@ -262,7 +262,7 @@ module.exports = function(cfg) {
 
 	// Verify file uploaded by browser.
 	// Return head incase we need to create a db record using head data.
-	var verifyUpload = function(s3Path, next) {
+	function verifyUpload(s3Path, next) {
 
 		head(s3Path, function(err, head1) {
 			if (err) return next(err);
@@ -283,7 +283,7 @@ module.exports = function(cfg) {
 		});
 	};
 
-	var urlPrivate = function(s3Path, next) {
+	function urlPrivate(s3Path, next) {
 
 		// todo:
 		// https://blogs.msdn.microsoft.com/ie/2008/07/02/ie8-security-part-v-comprehensive-protection/
@@ -300,7 +300,7 @@ module.exports = function(cfg) {
 		//return url;
 	};
 
-	var urlDownload = function(s3Path, filename, next) {
+	function urlDownload(s3Path, filename, next) {
 
 		//Content-Disposition: attachment; filename=foo.bar
 		var rcd = 'attachment; filename=' + filename;
@@ -314,7 +314,7 @@ module.exports = function(cfg) {
 		s3.getSignedUrl('getObject', params, next);
 	};
 
-	var urlSigned = function(s3Path, mime, next) {
+	function urlSigned(s3Path, mime, next) {
 
 		Prove('SSF', arguments);
 
@@ -340,7 +340,6 @@ module.exports = function(cfg) {
 		endpoint: endpoint,
 
 		getAccessKeyId: getAccessKeyId,
-		// getSecretAccessKey: getSecretAccessKey,
 
 		urlSigned: urlSigned,
 		urlPrivate: urlPrivate,
