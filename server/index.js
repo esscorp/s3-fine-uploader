@@ -10,8 +10,9 @@ var ok = Assert.ok;
 module.exports = function(cfg) {
 
 	// validate
-	ok(isFinite(cfg.expires), 'Config `expires` expected to be integer.');
 	ok(isString(cfg.bucket), 'Config `bucket` expected to be string.');
+	ok(isString(cfg.iam.accessKeyId), 'Config `iam.accessKeyId` expected to be string.');
+	ok(isString(cfg.iam.secretAccessKey), 'Config `iam.secretAccessKey` expected to be string.');
 
 	// AWS client
 	var s3 = new S3(cfg.iam);
