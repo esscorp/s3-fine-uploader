@@ -399,7 +399,7 @@ $(function() {
 Best practices for storing upload meta data in the database:
 
 - **s3Bucket:** You might want to span multiple buckets. For example, when moving assets to cleanup bucket names.
-- **s3Key:** Stores the UUID plus the file extension. UUID's are 36 chars so that leaves 14 chars for the extension. Every time we have added path(s) info the s3Key we have regretted it.
+- **s3Key:** Stores the UUID plus the file extension. UUID's are 36 chars so that leaves 14 chars for the extension. Every time we have added path(s) info to the s3Key we have regretted it.
 - **kind:** Stores the asset type ('PDF', 'JPEG', etc).
 - **filename:** Filename of the file on the uploader's computer. This can be useful when showing errors and such. Otherwise, the user loses all reference to what file name was uploaded. The user does not think in UUID. They think in file names.
 
