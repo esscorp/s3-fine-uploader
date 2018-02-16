@@ -241,10 +241,10 @@ $(function() {
 </div>
 
 <!-- express partial progress bar -->
-{{> progressbar }}
+{{> uploader/progressbar }}
 ```
 
-The `progressbar.hbs` template:
+The `uploader/progressbar.hbs` template:
 ```html
 <script type="text/javascript">
 $(function() {
