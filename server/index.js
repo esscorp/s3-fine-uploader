@@ -1,6 +1,6 @@
 'use strict';
 
-var isString = require('lodash.isstring');
+//var isString = require('lodash.isstring');
 var Assert = require('assert');
 var Prove = require('provejs-params');
 var AWS = require('aws-sdk');
@@ -11,15 +11,10 @@ module.exports = function(cfg) {
 
 	// validate
 	ok(isFinite(cfg.expires), 'Config `expires` expected to be integer.');
-	ok(isString(cfg.bucket), 'Config `bucket` expected to be a string.');
 
 	// AWS client
 	var s3 = new AWS.S3(cfg.iam);
 	var hostname = cfg.hostname || cfg.bucket + '.s3.amazonaws.com';
-
-	function name() {
-		return cfg.bucket;
-	}
 
 	function endpoint() {
 		return 'https://' + hostname;
@@ -32,7 +27,7 @@ module.exports = function(cfg) {
 
 			next(null, s3.config.credentials.accessKeyId);
 		});
-	};
+	}
 
 	function getSecretAccessKey(next) {
 
@@ -43,17 +38,17 @@ module.exports = function(cfg) {
 		});
 	}
 
-	function download(s3Path, next) {
+	function download(s3Bucket, s3Path, next) {
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Key: s3Path
 		};
 		s3.getObject(params, next);
-	};
+	}
 
-	function head(s3Path, next) {
+	function head(s3Bucket, s3Path, next) {
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Key: s3Path
 		};
 
@@ -64,11 +59,11 @@ module.exports = function(cfg) {
 			if (err) return next(err);
 			next(null, head);
 		});
-	};
+	}
 
-	function del(s3Path, next) {
+	function del(s3Bucket, s3Path, next) {
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Key: s3Path
 		};
 
@@ -79,36 +74,35 @@ module.exports = function(cfg) {
 			if (err) return next(err);
 			next();
 		});
-	};
+	}
 
-	function exists(s3Path, next) {
-		head(s3Path, function(err, head) {
+	function exists(s3Bucket, s3Path, next) {
+		head(s3Bucket, s3Path, function(err, head) {
 			if (err) return next(err);
-			next(null, (head));
+			next(null, head);
 		});
-	};
+	}
 
-	function contentType(s3Path, next) {
-		head(s3Path, function(err, head) {
+	function contentType(s3Bucket, s3Path, next) {
+		head(s3Bucket, s3Path, function(err, head) {
 			if (err) return next(err);
 			next(null, head.ContentType);
 		});
-	};
+	}
 
-	function contents(s3Path, next) {
-		download(s3Path, function(err, data) {
+	function contents(s3Bucket, s3Path, next) {
+		download(s3Bucket, s3Path, function(err, data) {
 			if (err) return next(err);
 
 			next(null, data.Body.toString());
 		});
-	};
+	}
 
-	function copy(dstKey, srcBucket, srcKey, next) {
+	function copy(srcBucket, srcKey, dstBucket, dstKey, next) {
 
-		var dstBucket = cfg.bucket;
 		var params = {
-			Bucket: dstBucket,
 			CopySource: srcBucket + '/' + srcKey,
+			Bucket: dstBucket,
 			Key: dstKey,
 			MetadataDirective: 'COPY'
 		};
@@ -120,7 +114,7 @@ module.exports = function(cfg) {
 
 			next(null, dstBucket);
 		});
-	};
+	}
 
 	// ***** www.fineuploader.com
 	// https://github.com/FineUploader/server-examples/blob/master/nodejs/s3/s3handler.js
@@ -151,7 +145,7 @@ module.exports = function(cfg) {
 
 			next(null, signature);
 		});
-	};
+	}
 
 	function signV4Policy(policy, base64Policy, next) {
 
@@ -174,7 +168,7 @@ module.exports = function(cfg) {
 
 			next(null, signature);
 		});
-	};
+	}
 
 	function signV2RestRequest(headersStr, next) {
 
@@ -187,7 +181,7 @@ module.exports = function(cfg) {
 
 			next(null, signature);
 		});
-	};
+	}
 
 	function signV4RestRequest(headersStr, next) {
 
@@ -204,7 +198,7 @@ module.exports = function(cfg) {
 
 			next(null, signature);
 		});
-	};
+	}
 
 	// Ensures the policy document associated with a 'simple' (non-chunked) request is
 	// targeting the correct bucket and the min/max-size is as expected.
@@ -248,23 +242,23 @@ module.exports = function(cfg) {
 		// console.log('* isValidSize:', isValidSize);
 
 		return isValidBucket && isValidSize;
-	};
+	}
 
 	// Ensures the REST request is targeting the correct bucket.
 	// Omit if you don't want to support chunking.
 	function isValidRestRequest(headerStr, version) {
 		if (version === 4) {
 			return new RegExp('host:' + cfg.hostname).exec(headerStr) != null;
+		} else {
+			return new RegExp('/' + cfg.bucket + '/.+$').exec(headerStr) != null;
 		}
-
-		return new RegExp('/' + cfg.bucket + '/.+$').exec(headerStr) != null;
-	};
+	}
 
 	// Verify file uploaded by browser.
 	// Return head incase we need to create a db record using head data.
-	function verifyUpload(s3Path, next) {
+	function verifyUpload(s3Bucket, s3Path, next) {
 
-		head(s3Path, function(err, head1) {
+		head(s3Bucket, s3Path, function(err, head1) {
 			if (err) return next(err);
 
 			var size = head1.ContentLength;
@@ -273,7 +267,7 @@ module.exports = function(cfg) {
 
 			if (cfg.maxSize && size > cfg.maxSize) {
 				// delete file since it too large
-				del(s3Path, function(err) {
+				del(s3Bucket, s3Path, function(err) {
 					if (err) return next(err);
 					next(null, false, size, mime, etag);
 				});
@@ -281,9 +275,9 @@ module.exports = function(cfg) {
 				next(null, true, size, mime, etag);
 			}
 		});
-	};
+	}
 
-	function urlPrivate(s3Path, next) {
+	function urlPrivate(s3Bucket, s3Path, next) {
 
 		// todo:
 		// https://blogs.msdn.microsoft.com/ie/2008/07/02/ie8-security-part-v-comprehensive-protection/
@@ -291,52 +285,51 @@ module.exports = function(cfg) {
 		// X-Content-Type-Options: nosniff
 
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Expires: cfg.expires,
 			//ResponseContentDisposition: 'attachment',
 			Key: s3Path
 		};
 		s3.getSignedUrl('getObject', params, next);
 		//return url;
-	};
+	}
 
-	function urlDownload(s3Path, filename, next) {
+	function urlDownload(s3Bucket, s3Path, filename, next) {
 
 		//Content-Disposition: attachment; filename=foo.bar
 		var rcd = 'attachment; filename=' + filename;
 
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Expires: cfg.expires,
 			ResponseContentDisposition: rcd,
 			Key: s3Path
 		};
 		s3.getSignedUrl('getObject', params, next);
-	};
+	}
 
-	function urlSigned(s3Path, mime, next) {
+	function urlSigned(s3Bucket, s3Path, mime, next) {
 
 		Prove('SSF', arguments);
 
 		//console.log('urlSigned()'.red, s3Path, mime);
 
 		var params = {
-			Bucket: cfg.bucket,
+			Bucket: s3Bucket,
 			Expires: cfg.expires,
 			ContentType: mime,
 			Key: s3Path
 		};
 
-		// force upload to fail
+		// to force upload to fail
 		// delete params.ContentType;
 
 		s3.getSignedUrl('putObject', params, next);
-	};
+	}
 
 	// public functions
 	return {
 
-		name: name,
 		endpoint: endpoint,
 
 		getAccessKeyId: getAccessKeyId,
