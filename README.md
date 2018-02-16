@@ -398,7 +398,24 @@ $(function() {
 
 Best practices for storing upload meta data in the database:
 
-- **s3Bucket ENUM():** You might want to span multiple buckets. For example, when moving assets to cleanup bucket names.
-- **s3Key VARCHAR(46):** Stores the UUID plus the file extension. UUID's are 36 chars so that leaves 10 chars for the extension. Every time we have added path(s) info the s3Key we have regretted it.
-- **kind VARCHAR(10):** Stores the asset type ('PDF', 'JPEG', etc).
-- **filename VARCHAR(100):** Filename of the file on the uploader's computer. This can be useful when showing errors and such. Otherwise, the user loses all reference to what file name was uploaded. The user does not think in UUID. They think in file names.
+- **s3Bucket:** You might want to span multiple buckets. For example, when moving assets to cleanup bucket names.
+- **s3Key:** Stores the UUID plus the file extension. UUID's are 36 chars so that leaves 14 chars for the extension. Every time we have added path(s) info the s3Key we have regretted it.
+- **kind:** Stores the asset type ('PDF', 'JPEG', etc).
+- **filename:** Filename of the file on the uploader's computer. This can be useful when showing errors and such. Otherwise, the user loses all reference to what file name was uploaded. The user does not think in UUID. They think in file names.
+
+
+```sql
+CREATE TABLE `uploads` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `status` varchar(30) DEFAULT NULL,
+  `kind` varchar(10) DEFAULT NULL,
+  `s3bucket` enum('corp-eng-app-feature') NOT NULL DEFAULT 'corp-eng-app-feature',
+  `s3key` varchar(50) DEFAULT NULL,
+  `filename` varchar(100) DEFAULT NULL,
+  `errcode` varchar(20) DEFAULT NULL,
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+) ENGINE=InnoDB AUTO_INCREMENT=1
+```
