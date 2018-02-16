@@ -111,19 +111,19 @@ var uploader = new S3Uploader({
 		secretAccessKey: process.env.AWS_APP_UPLOADER_SECRET_ACCESS_KEY
 	}
 });
-var controllers = require('@esscorp/uploader/controllers');
+var controllers = require('@esscorp/uploader/server/controllers');
 var signerController = controllers.signer(uploader);
 var blankController = controllers.blank(); // ie9 iframe support
 
 // Controller to show the upload form.
 var uploadController = function(req, res, next) {
-	bucket.getAccessKeyId(function(err, accessKeyId) {
+	uploader.getAccessKeyId(function(err, accessKeyId) {
         if (err) next(err);
 
 		res.render('views/upload', {
             accessKeyId: accessKeyId,
-            endpoint: bucket.endpoint(),
-            timeServer: Date.now()
+            endpoint: uploader.endpoint(),
+            serverTime: Date.now()
         });
 	});
 };
@@ -137,12 +137,12 @@ var successController = function(req, res, next) {
 	var name = req.body.name;
 	var kind = key.substring(37).toUpperCase();
 
-    bucket.verifyUpload(key, function(err, verified) {
+    uploader.verifyUpload(key, function(err, verified) {
 		if (err) return next(err);
 		if (!verified) return next(new Error('S3 file is invalid'));
 
 		// setup for saving upload meta data to database
-		var s3Bucket = bucket.name();
+		var s3Bucket = uploader.name();
 		var s3Key = uuid;
 
 		// todo: save meta data to database here
@@ -153,9 +153,9 @@ var successController = function(req, res, next) {
 var express = require('express');
 var router = express.Router();
 router.get('/upload', uploadController); // show upload form
-router.post('/signature', signerController); // FineUpload callback to sign upload requests
-router.post('/success', successController); // FineUpload callback to handle successful uploads
-router.get('/ie9support', blankController); // iframe support for ie9
+router.post('/upload/signature', signerController); // FineUpload callback to sign upload requests
+router.get('/upload/blank', blankController); // iframe support for ie9
+router.post('/upload/success', successController); // FineUpload callback to handle successful uploads
 ```
 
 The `views/upload.hbs` template:
@@ -180,7 +180,7 @@ $(function() {
 	var btn = $('[name="file"]');
 	var base = window.location.href;
 	var endpointSign = base + '/signature';
-	var endpointBlank = base + '/ie9support';
+	var endpointBlank = base + '/blank';
 	var endpointSuccess = base + '/success';
 	var sizeLimit = 1000 * 1000 * 20; // 20 MB
 	var drift = +serverTime - Date.now();

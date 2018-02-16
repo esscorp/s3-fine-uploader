@@ -51,8 +51,22 @@ exports._nonChunked = function(uploader, req, res, next) {
 	});
 };
 
-// Controller to handle the signature requests from FineUploader.
-// For multipart uploads this controller gets called for every part.
+
+/*
+Controller to handle the signature requests from FineUploader.
+For multipart uploads this controller gets called for every part.
+
+The body of the HTTP POST will be a policy like: 
+{ expiration: '2018-02-16T19:51:52.607Z',
+  conditions:
+   [ { acl: 'private' },
+     { bucket: '...' },
+     { 'Content-Type': 'image/jpeg' },
+     { success_action_status: '200' },
+     { key: '47d74567-3d30-4c28-960b-46b0637d42ac.jpg' },
+     { 'x-amz-meta-qqfilename': 'background.jpg' },
+     [ 'content-length-range', '0', '20000000' ] ] }
+*/
 exports.signer = function(uploader) {
 	return function(req, res, next) {
 		//var policy = req.body;
