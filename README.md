@@ -398,7 +398,7 @@ $(function() {
 
 Best practices for storing upload meta data in the database:
 
-- **s3Bucket ENUM():** This useful when you want to move S3 assets to new buckets. No one is perfect.
-- **s3Key VARCHAR(60):** Stores the UUID plus the file extension.
+- **s3Bucket ENUM():** You might want to span multiple buckets. For example, when moving assets to cleanup bucket names.
+- **s3Key VARCHAR(46):** Stores the UUID plus the file extension. UUID's are 36 chars so that leaves 10 chars for the extension. Every time we have added path(s) info the s3Key we have regretted it.
 - **kind VARCHAR(10):** Stores the asset type ('PDF', 'JPEG', etc).
-- **filename VARCHAR(100):** Filename of the fie on the uploader's computer. This can be useful when showing errors and such. Otherwise, the user loses all reference to what file was uploaded. The user does not think in UUID.   
+- **filename VARCHAR(100):** Filename of the file on the uploader's computer. This can be useful when showing errors and such. Otherwise, the user loses all reference to what file name was uploaded. The user does not think in UUID. They think in file names.
