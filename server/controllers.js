@@ -56,7 +56,7 @@ exports._nonChunked = function(uploader, req, res, next) {
 Controller to handle the signature requests from FineUploader.
 For multipart uploads this controller gets called for every part.
 
-The body of the HTTP POST will be a policy like: 
+The body of the HTTP POST will be a policy like:
 { expiration: '2018-02-16T19:51:52.607Z',
   conditions:
    [ { acl: 'private' },

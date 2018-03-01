@@ -15,7 +15,7 @@ module.exports = function(cfg) {
 	ok(isString(cfg.iam.secretAccessKey), 'Config `iam.secretAccessKey` expected to be string.');
 
 	// AWS client
-	var s3 = new S3(cfg.iam);
+	var s3 = new S3(cfg);
 	var hostname = cfg.bucket + '.s3.amazonaws.com';
 
 	function endpoint() {
