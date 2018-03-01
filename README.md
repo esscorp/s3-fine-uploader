@@ -145,7 +145,13 @@ var successController = function(req, res, next) {
 		var s3Bucket = uploader.name();
 		var s3Key = uuid;
 
-		// todo: save meta data to database here
+		// todo: save meta data your uploads database here
+
+		// respond to uploader
+		res.json({
+			id: upload.id,
+			uuid: uuid
+		});
 	});
 };
 
