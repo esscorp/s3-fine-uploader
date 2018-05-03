@@ -16,11 +16,9 @@ exports._chunked = function(uploader, req, res, next) {
 
 		res.setHeader('Content-Type', 'application/json');
 
-		if (uploader.isValidRestRequest(stringToSign, version)) {
-			res.json(jsonResponse);
-		} else {
-			next(new Error('Invalid chunked request'));
-		}
+		if (!uploader.isValidRestRequest(stringToSign, version)) return next(new Error('Invalid chunked request'));
+
+		res.json(jsonResponse);
 	});
 };
 
@@ -43,11 +41,9 @@ exports._nonChunked = function(uploader, req, res, next) {
 
 		res.setHeader('Content-Type', 'application/json');
 
-		if (uploader.isPolicyValid(policy)) {
-			res.json(jsonResponse);
-		} else {
-			next(new Error('Invalid non-chunked request'));
-		}
+		if (!uploader.isPolicyValid(policy)) return next(new Error('Invalid non-chunked request'));
+
+		res.json(jsonResponse);
 	});
 };
 
