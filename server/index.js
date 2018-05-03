@@ -77,7 +77,7 @@ module.exports = function(cfg) {
 
 		for (var i = 0; i < conditions.length; i++) {
 			credentialCondition = conditions[i]['x-amz-credential'];
-			if (credentialCondition != null) break;
+			if (!credentialCondition) break;
 		}
 
 		var matches = /.+\/(.+)\/(.+)\/s3\/aws4_request/.exec(credentialCondition);
@@ -127,7 +127,9 @@ module.exports = function(cfg) {
 	// the top of this file to disable size validation on the policy document.
 	function isPolicyValid(policy) {
 
-		var bucket, parsedMaxSize, parsedMinSize;
+		var bucket;
+		var parsedMaxSize;
+		var parsedMinSize;
 		var expectedMinSize = cfg.minSize;
 		var expectedMaxSize = cfg.maxSize;
 		var expectedBucket = cfg.bucket;
@@ -150,10 +152,8 @@ module.exports = function(cfg) {
 
 		// If expectedMinSize and expectedMax size are not null (see above), then
 		// ensure that the client and server have agreed upon the exact same values.
-		if (expectedMinSize != null && expectedMaxSize != null) {
-			isValidSize =
-				(parsedMinSize === expectedMinSize.toString())
-				&& (parsedMaxSize === expectedMaxSize.toString());
+		if (expectedMinSize && expectedMaxSize) {
+			isValidSize = (parsedMinSize === expectedMinSize.toString()) && (parsedMaxSize === expectedMaxSize.toString());
 		}
 
 		// console.log('* isValidBucket:', isValidBucket);
@@ -166,9 +166,9 @@ module.exports = function(cfg) {
 	// Omit if you don't want to support chunking.
 	function isValidRestRequest(headerStr, version) {
 		if (version === 4) {
-			return new RegExp('host:' + cfg.hostname).exec(headerStr) != null;
+			return !!(new RegExp('host:' + cfg.hostname).exec(headerStr));
 		} else {
-			return new RegExp('/' + cfg.bucket + '/.+$').exec(headerStr) != null;
+			return !!(new RegExp('/' + cfg.bucket + '/.+$').exec(headerStr));
 		}
 	}
 
