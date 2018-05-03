@@ -28,7 +28,7 @@ exports._nonChunked = function(uploader, req, res, next) {
 
 	var policy = req.body;
 	var isV4 = !!req.query.v4;
-	var base64Policy = new Buffer(JSON.stringify(policy)).toString('base64');
+	var base64Policy = Buffer.from(JSON.stringify(policy)).toString('base64');
 	var sign = (isV4)
 		? uploader.signV4Policy
 		: uploader.signV2Policy;
