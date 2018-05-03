@@ -183,15 +183,14 @@ module.exports = function(cfg) {
 			var mime = head1.ContentType;
 			var etag = head1.ETag;
 
-			if (cfg.maxSize && size > cfg.maxSize) {
-				// delete file since it too large
-				s3.del(cfg.bucket, s3Path, function(err) {
-					if (err) return next(err);
-					next(null, false, size, mime, etag);
-				});
-			} else {
-				next(null, true, size, mime, etag);
-			}
+			if (!cfg.maxSize || size <= cfg.maxSize) return next(null, true, size, mime, etag);
+
+			// delete file since it too large
+			s3.del(cfg.bucket, s3Path, function(err) {
+				if (err) return next(err);
+
+				next(null, false, size, mime, etag);
+			});
 		});
 	}
 
