@@ -1,7 +1,7 @@
 'use strict';
 
 var S3 = require('@esscorp/s3');
-var isString = require('lodash.isstring');
+var isString = require('lodash.isstring'); // eslint-disable-line capitalized-require-var
 var Assert = require('assert');
 //var Prove = require('provejs-params');
 var CryptoJS = require('crypto-js');
