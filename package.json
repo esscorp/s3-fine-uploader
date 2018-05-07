@@ -29,7 +29,7 @@
     "provejs-params": "^1.0.1"
   },
   "devDependencies": {
-    "@esscorp/eslint": "^2.5.1",
+    "@esscorp/eslint": "^2.6.3",
     "eslint": "^4.18.1",
     "grunt": "^1.0.2",
     "grunt-eslint": "^20.1.0"
